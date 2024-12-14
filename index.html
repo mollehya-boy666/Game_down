@@ -3,17 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FTP Server Status</title>
+  <title>FTP Server Connection</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
-      padding: 0;
       background-color: #f9f9f9;
       color: #333;
     }
     h1 {
       color: #4CAF50;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
     }
     .status {
       font-weight: bold;
@@ -31,23 +56,60 @@
   </style>
 </head>
 <body>
-  <h1>FTP Server Status</h1>
-  <p>Status: <span class="status">Checking...</span></p>
+  <h1>FTP Server Connection</h1>
+
+  <form id="ftp-form">
+    <label for="host">Host:</label>
+    <input type="text" id="host" name="host" placeholder="FTP Host (e.g., ftp.example.com)" required>
+
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" placeholder="Username" required>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" placeholder="Password" required>
+
+    <label for="port">Port:</label>
+    <input type="number" id="port" name="port" placeholder="Port (default: 21)" value="21" required>
+
+    <button type="submit">Connect</button>
+  </form>
+
+  <p>Status: <span class="status">Waiting...</span></p>
   <h2>Files:</h2>
   <ul id="file-list"></ul>
 
   <script>
-    async function fetchFTPStatus() {
+    const form = document.getElementById('ftp-form');
+    const statusElem = document.querySelector('.status');
+    const fileList = document.getElementById('file-list');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Gather form data
+      const formData = new FormData(form);
+      const ftpDetails = {
+        host: formData.get('host'),
+        username: formData.get('username'),
+        password: formData.get('password'),
+        port: formData.get('port')
+      };
+
       try {
-        const response = await fetch('/ftp-files');
+        // Send data to the server
+        const response = await fetch('/ftp-files', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ftpDetails)
+        });
+
         const data = await response.json();
-        const statusElem = document.querySelector('.status');
-        const fileList = document.getElementById('file-list');
-        
+
         if (data.online) {
           statusElem.textContent = 'Online';
           statusElem.style.color = 'green';
           
+          // Display files
           fileList.innerHTML = '';
           data.files.forEach(file => {
             const listItem = document.createElement('li');
@@ -60,11 +122,11 @@
           fileList.innerHTML = '<li>No files available</li>';
         }
       } catch (err) {
-        console.error('Error fetching FTP status:', err);
+        statusElem.textContent = 'Error connecting to FTP server';
+        statusElem.style.color = 'red';
+        console.error(err);
       }
-    }
-
-    fetchFTPStatus();
+    });
   </script>
 </body>
-</html>
+  </html>
