@@ -1,1 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FTP Server Status</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    .status {
+      font-weight: bold;
+    }
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+    li {
+      background: #eee;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>FTP Server Status</h1>
+  <p>Status: <span class="status">Checking...</span></p>
+  <h2>Files:</h2>
+  <ul id="file-list"></ul>
 
+  <script>
+    async function fetchFTPStatus() {
+      try {
+        const response = await fetch('/ftp-files');
+        const data = await response.json();
+        const statusElem = document.querySelector('.status');
+        const fileList = document.getElementById('file-list');
+        
+        if (data.online) {
+          statusElem.textContent = 'Online';
+          statusElem.style.color = 'green';
+          
+          fileList.innerHTML = '';
+          data.files.forEach(file => {
+            const listItem = document.createElement('li');
+            listItem.textContent = file.name;
+            fileList.appendChild(listItem);
+          });
+        } else {
+          statusElem.textContent = 'Offline';
+          statusElem.style.color = 'red';
+          fileList.innerHTML = '<li>No files available</li>';
+        }
+      } catch (err) {
+        console.error('Error fetching FTP status:', err);
+      }
+    }
+
+    fetchFTPStatus();
+  </script>
+</body>
+</html>
